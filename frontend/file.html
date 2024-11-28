@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Mapa Estático com Marcadores</title>
+    <style>
+      #map {
+        width: 600px;
+        height: 400px;
+      }
+    </style>
+  </head>
+  <body>
+    <img id="map" alt="Mapa Estático do Google" />
+    <script>
+      async function getRoute() {
+        const response = await fetch(
+          "https://routes.googleapis.com/directions/v2:computeRoutes/?fields=*",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              origin: {
+                address: "Av. Saíra Amarela, Condomínio Vitta Club House",
+              },
+              destination: {
+                address: "Av. Coronel Teixeira, Shopping Ponta Negra",
+              },
+              travelMode: "DRIVE",
+            }),
+            headers: {
+              "Content-Type": "application/json",
+              "X-Goog-Api-Key": "AIzaSyB-57K3C3iKjcqCMOLJKkeQE6560DPvKnE",
+            },
+          }
+        )
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const data = await response.json()
+        return {
+          origin: data.routes[0].legs[0].startLocation,
+          destination: data.routes[0].legs[0].endLocation,
+          polyline: data.routes[0].polyline.encodedPolyline
+        }
+      }
+
+      async function initMap() {
+        try {
+          const route = await getRoute()
+
+          const origin = route.origin.latLng
+          const destination = route.destination.latLng
+          const apiKey = "AIzaSyB-57K3C3iKjcqCMOLJKkeQE6560DPvKnE"
+          
+          const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=600x400&maptype=roadmap&style=feature:road|color:0xfefefe&markers=color:0x27B906|${origin.latitude},${origin.longitude}&markers=color:0xFF0000|${destination.latitude},${destination.longitude}&path=color:0x2986cc|weight:4&key=${apiKey}`;
+
+          document.getElementById("map").src = staticMapUrl
+        } catch (error) {
+          console.error("Erro ao obter a rota:", error)
+        }
+      }
+
+      window.onload = initMap
+    </script>
+  </body>
+</html>
